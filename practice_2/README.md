@@ -201,3 +201,119 @@ solve satisfy;
 ```
 ### Результат
 ![Результат задания 6](images/p2_ex6.png)
+
+## Задание 7
+
+```python
+import re
+from collections import defaultdict
+
+def parse_package_file(file_path):
+    package_data = defaultdict(dict)
+
+    with open(file_path, 'r') as file:
+        for line in file:
+            if ' - ' not in line:
+                continue 
+
+            package_meta, dep_list = line.split(" - ")
+            pkg_name, pkg_version = package_meta.split()
+
+            dep_dict = {}
+            if dep_list.strip():
+                dep_items = dep_list.split()
+                for dep_item in dep_items:
+                    name, version = extract_dep_info(dep_item)
+                    if name:
+                        dep_dict[name] = version
+
+            package_data[pkg_name] = {
+                "version": pkg_version,
+                "dependencies": dep_dict
+            }
+
+    return package_data
+
+def extract_dep_info(dep_entry):
+    pattern = re.match(r'([a-zA-Z0-9_]+)\s*([^\s]*)', dep_entry)
+    if pattern:
+        return pattern.group(1).strip(), pattern.group(2).strip()
+    return None, None
+
+def attempt_dependency_resolution(packages):
+    version_store = {}
+    resolved = {}
+
+    def resolve_pkg_chain(pkg_name):
+        if pkg_name in resolved:
+            return True
+
+        pkg_details = packages.get(pkg_name)
+        if not pkg_details:
+            return False
+
+        pkg_deps = pkg_details["dependencies"]
+
+        for dep_name, dep_version in pkg_deps.items():
+            if not handle_dependency(dep_name, dep_version, version_store):
+                return False
+
+        resolved[pkg_name] = pkg_details["version"]
+        return True
+
+    def handle_dependency(dep_name, version_constraint, version_store):
+        if dep_name in version_store:
+            if not is_version_compatible(version_store[dep_name], version_constraint):
+                return False
+        else:
+            version_store[dep_name] = version_constraint
+            if not resolve_pkg_chain(dep_name):
+                return False
+        return True
+
+    for pkg in packages:
+        if not resolve_pkg_chain(pkg):
+            print(f"Error: Could not resolve dependencies for {pkg}")
+            return None
+
+    return resolved
+
+def is_version_compatible(installed_version, constraint):
+    required_version = constraint.lstrip('^>=')
+    if constraint.startswith('>='):
+        return installed_version >= required_version
+    elif constraint.startswith('^'):
+        return installed_version >= required_version
+    elif constraint.startswith('<'):
+        return installed_version < required_version
+    else:
+        return installed_version == required_version
+
+file_path = 'dependencies.txt'
+package_info = parse_package_file(file_path)
+final_resolution = attempt_dependency_resolution(package_info)
+
+if final_resolution:
+    print("Dependency resolution successful!")
+    for pkg, ver in final_resolution.items():
+        print(f"{pkg}: {ver}")
+else:
+    print("Dependency resolution failed.")
+```
+
+### Тестовый файл
+
+```txt
+root 1.0.0 - foo ^1.0.0 target ^2.0.0
+foo 1.1.0 - left ^1.0.0 right ^1.0.0
+foo 1.0.0 -
+left 1.0.0 - shared >=1.0.0
+right 1.0.0 - shared <2.0.0
+shared 2.0.0 -
+shared 1.0.0 - target ^1.0.0
+target 2.0.0 - 
+target 1.0.0 -
+```
+
+### Результат
+![Результат задания 7](images/p2_ex7.png)
