@@ -67,7 +67,7 @@ if __name__ == "__main__":
 # Задание 3
 ### Код
 
-```
+```python
 import json
 
 def generate_makefile(civgraph, output_file="Makefile"):
