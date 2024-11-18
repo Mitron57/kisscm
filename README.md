@@ -8,3 +8,4 @@
 # Домашние задания
  - [Домашнее задание 1](https://github.com/Mitron57/ash)
  - [Домашнее задание 2](https://github.com/Mitron57/GitVis)
+ - [Домашнее задание 3](https://github.com/Mitron57/doommy)
